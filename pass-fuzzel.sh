@@ -3,10 +3,14 @@
 shopt -s nullglob globstar
 
 typeit=0
-if [[ $1 == "--type" ]]; then
-	typeit=1
-	shift
-fi
+otpmode=0
+
+for arg in "$@"; do
+	case "$arg" in
+		--type) typeit=1 ;;
+		--otp)  otpmode=1 ;;
+	esac
+done
 
 dmenu="fuzzel --dmenu"
 
@@ -31,10 +35,25 @@ password=$(printf '%s\n' "${password_files[@]}" | sort | $dmenu)
 
 [[ -n $password ]] || exit
 
-if [[ $typeit -eq 0 ]]; then
-	pass show -c "$password" 2>/dev/null
+if [[ $otpmode -eq 1 ]]; then
+	if ! command -v pass-otp &>/dev/null && ! pass otp --help &>/dev/null 2>&1; then
+		echo "pass-otp extension not found. Install: https://github.com/tadfisher/pass-otp" >&2
+		exit 1
+	fi
+	if [[ $typeit -eq 1 ]]; then
+		pass otp "$password" \
+			| { IFS= read -r code; printf %s "$code"; } \
+			| $type_cmd
+	else
+		pass otp -c "$password" 2>/dev/null
+	fi
 else
-	pass show "$password" \
-		| { IFS= read -r pass; printf %s "$pass"; } \
-		| $type_cmd
+	if [[ $typeit -eq 0 ]]; then
+		pass show -c "$password" 2>/dev/null
+	else
+		pass show "$password" \
+			| { IFS= read -r pass; printf %s "$pass"; } \
+			| $type_cmd
+	fi
 fi
+

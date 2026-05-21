@@ -9,6 +9,7 @@ Lets you select, copy, or type any password from your password store via a fuzze
 - Browse and select passwords from your `pass` store using fuzzel
 - Copy selected password to clipboard (`pass show -c`)
 - Type selected password directly into the focused field via `ydotool` (Wayland) or `xdotool` (X11)
+- OTP support via --otp: generate a TOTP code and copy or type it
 - Respects `$PASSWORD_STORE_DIR`
 - Tiny — single self-contained shell script
 
@@ -16,6 +17,7 @@ Lets you select, copy, or type any password from your password store via a fuzze
 
 - [`pass`](https://www.passwordstore.org/)
 - [`fuzzel`](https://codeberg.org/dnkl/fuzzel)
+- For OTP: [`pass-otp`](https://github.com/tadfisher/pass-otp) extension
 - For `--type` on Wayland: [`ydotool`](https://github.com/ReimuNotMoe/ydotool)
 - For `--type` on X11: [`xdotool`](https://github.com/jordansissel/xdotool)
 
@@ -42,7 +44,39 @@ pass-fuzzel
 pass-fuzzel --type
 ```
 
-The script auto-detects Wayland vs X11 when using `--type`.
+**Generate OTP and copy to clipboard:**
+```bash
+pass-fuzzel --otp
+```
+
+**Generate OTP and type it into the focused field:**
+```bash
+pass-fuzzel --otp --type
+```
+
+The `--otp` and `--type` flags are independent and can be combined freely. The script auto-detects Wayland vs X11 when using `--type`.
+
+## Keybinding example (Hyprland)
+
+```ini
+# Passwords
+bind = SUPER, P, exec, pass-fuzzel
+bind = SUPER SHIFT, P, exec, pass-fuzzel --type
+
+# OTP codes
+bind = SUPER, O, exec, pass-fuzzel --otp
+bind = SUPER SHIFT, O, exec, pass-fuzzel --otp --type
+```
+
+## Setting up OTP entries
+
+OTP secrets are stored inside your `pass` entries as an `otpauth://` URI. To add one:
+
+```bash
+pass otp insert github/myaccount
+```
+
+You'll be prompted to paste the `otpauth://totp/...` URI (usually shown as a QR code — scan it with a QR reader to get the raw URI).
 
 ## Notes on `--type` / ydotool
 
